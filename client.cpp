@@ -29,7 +29,7 @@ using master::VariableName;
 using master::VariableValue;
 using master::Chunk;
 using master::FileInfo;
-using master::UploadStatus;
+using master::Result;
 
 
 class ClientNode {
@@ -73,11 +73,11 @@ class ClientNode {
 		// "client-side streaming"
 		// The client sends a stream of data to the server.
 		// Useful for sending big chunks of data (e.g. file upload)
-		bool uploadFile (const std::string filename) {
+		bool uploadFile (const std::string local_filename, const std::string remote_filename) {
 			char buffer [MAX_FILE_SIZE];
 			unsigned int read_size = 0, uploaded_size = 0;
 			std::fstream file;
-    			file = std::fstream(filename, std::ios::in | std::ios::binary);
+    			file = std::fstream(local_filename, std::ios::in | std::ios::binary);
 			for (read_size = 0; read_size < MAX_FILE_SIZE; ++read_size) {
 				file.read((char*) &(buffer[read_size]), sizeof(char));
 				if (file.eof())
@@ -86,11 +86,22 @@ class ClientNode {
 			file.close();
 			std::cout << "Client: read " << read_size << " bytes." << std::endl;
 
+
+
     			ClientContext context;
+			FileInfo server_file;
+			server_file.set_filename(remote_filename);
+			Result reply;
+    			Status status = stub_->setFileName(&context, server_file, &reply);
+    			if (!status.ok()) {
+      				std::cout << "Client: rpc failed. Is server running ?" << std::endl;
+      				return false;
+    			}
+
+    			ClientContext context2;
 			Chunk chunk;
-			UploadStatus reply;
 			std::unique_ptr<ClientWriter<Chunk> > writer(
-        				stub_->uploadFile(&context, &reply));
+        				stub_->uploadFile(&context2, &reply));
 			for (uploaded_size = 0; uploaded_size < read_size; ++uploaded_size) {
 				chunk.set_data(&buffer[uploaded_size], 1);
 				if (!writer->Write(chunk)) {
@@ -99,8 +110,8 @@ class ClientNode {
 				}
 			}
 			writer->WritesDone();
-    			Status status = writer->Finish();
-			if ((read_size != uploaded_size) || (!status.ok()) || (!reply.result())) {
+    			Status status2 = writer->Finish();
+			if ((read_size != uploaded_size) || (!status2.ok())) {
       				std::cout << "Client: upload failed. Bytes uploaded = " 
 					<< uploaded_size << std::endl;
 				return false;
@@ -121,7 +132,7 @@ int main ()
 	std::string server_address ("localhost:50051");
 	ClientNode client(server_address);
 
-	client.uploadFile("in.pdf");
+	client.uploadFile("in.pdf", "pippo.pdf");
 
 	VariableValue ret;
 	VariableName name;

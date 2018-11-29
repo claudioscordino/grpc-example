@@ -6,7 +6,8 @@ service Master {
   // Sends a greeting
   rpc getVariable (VariableName) returns (VariableValue) {}
   rpc traceVariable (VariableName) returns (stream VariableValue) {}
-  rpc uploadFile (stream Chunk) returns (UploadStatus) {}
+  rpc uploadFile (stream Chunk) returns (Result) {}
+  rpc setFileName (FileInfo) returns (Result) {}
 }
 
 // The request message containing variable's name.
@@ -24,9 +25,8 @@ message Chunk {
         bytes data = 1;
 }
 
-message UploadStatus {
-        string msg = 1;
-        bool result = 2;
+message Result {
+        string msg = 2;
 }
 
 message FileInfo {

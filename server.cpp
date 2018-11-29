@@ -30,9 +30,9 @@ using master::VariableName;
 using master::VariableValue;
 using master::Chunk;
 using master::FileInfo;
-using master::UploadStatus;
+using master::Result;
 
-
+std::string upload_filename;
 
 class ServerNode final : public Master::Service {
 	public:
@@ -40,6 +40,13 @@ class ServerNode final : public Master::Service {
                   		VariableValue* val) override {
 			std::cout << "Server: request to read variable: " << var->name() << std::endl;
 			val->set_value(42);
+  			return Status::OK;
+		}
+
+		Status setFileName(ServerContext* context, const FileInfo* file,
+                  		Result* res) override {
+			std::cout << "Server: request to upload data on file : " << file->filename() << std::endl;
+			upload_filename = file->filename();
   			return Status::OK;
 		}
 
@@ -61,9 +68,9 @@ class ServerNode final : public Master::Service {
                 // The client sends a stream of data to the server.
                 // Useful for sending big chunks of data (e.g. file upload)
 		Status uploadFile(ServerContext* context, ServerReader<Chunk>* reader,
-                     		UploadStatus* result) override {
+                     		Result* result) override {
 			std::fstream file;
-                        file = std::fstream("file.out", std::ios::out | std::ios::binary | std::ios::trunc);
+                        file = std::fstream(upload_filename, std::ios::out | std::ios::binary | std::ios::trunc);
 			int size = 0;
 			Chunk chunk;
 			for (size = 0; size < MAX_FILE_SIZE; ++size) {
@@ -73,7 +80,6 @@ class ServerNode final : public Master::Service {
 			}
 			std::cout << "Server: received " << size << " bytes." << std::endl;
 
-			result->set_result(true);
 			return Status::OK;
 		}
 };
