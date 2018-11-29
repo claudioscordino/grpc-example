@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package messages;
+
+service Getter {
+  // Sends a greeting
+  rpc get_variable (VariableName) returns (VariableValue) {}
+  rpc trace_variable (VariableName) returns (stream VariableValue) {}
+}
+
+// The request message containing variable's name.
+message VariableName {
+	string name = 1;
+}
+
+// The response message containing variable's value
+message VariableValue {
+  	uint64 value = 1;
+	uint64 timestamp = 2;
+}
+
