@@ -5,7 +5,7 @@ package master;
 service Master {
   // Sends a greeting
   rpc getVariable (VariableName) returns (VariableValue) {}
-  //rpc traceVariable (VariableName) returns (stream VariableValue) {}
+  rpc traceVariable (VariableName) returns (stream VariableValue) {}
 }
 
 // The request message containing variable's name.

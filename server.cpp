@@ -32,7 +32,19 @@ class ServerNode final : public Master::Service {
 	public:
 		Status getVariable(ServerContext* context, const VariableName* var,
                   		VariableValue* val) override {
+			std::cout << "Server: request to read variable: " << var->name() << std::endl;
 			val->set_value(42);
+  			return Status::OK;
+		}
+
+		Status traceVariable(ServerContext* context, const VariableName* var,
+                    		ServerWriter<VariableValue>* writer) override {
+			std::cout << "Server: request to trace variable: " << var->name() << std::endl;
+  			for (int i = 0; i < 100; ++i) {
+				VariableValue var;
+				var.set_value(i);
+      				writer->Write(var);
+    			}
   			return Status::OK;
 		}
 };

@@ -42,6 +42,23 @@ class ClientNode {
     			}
     			return true;
   		}
+ 		bool traceVariable(const VariableName* name) {
+    			ClientContext context;
+			VariableValue val;
+			std::unique_ptr<ClientReader<VariableValue> > reader(
+        				stub_->traceVariable(&context, *name));
+    			while (reader->Read(&val)) {
+				std::cout << "Client: received value " << val.value() << std::endl;
+			}
+    			Status status = reader->Finish();
+			if (status.ok()) {
+      				std::cout << "Client: tracing succeeded" << std::endl;
+				return true;
+    			} else {
+      				std::cout << "Client: tracing failed" << std::endl;
+				return false;
+    			}
+  		}
 
 	private:
 		std::unique_ptr<Master::Stub> stub_;
@@ -56,9 +73,11 @@ int main ()
 
 	VariableValue ret;
 	VariableName name;
-	name.set_name("varname");
+	name.set_name("varname1");
   	if (client.getVariable(&name, &ret))
 		std::cout << "Client retrieved = " << ret.value() << std::endl;
+	name.set_name("varname2");
+	client.traceVariable(&name);
 
 	return 0;
 }
