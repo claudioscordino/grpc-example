@@ -1,11 +1,11 @@
 syntax = "proto3";
 
-package messages;
+package master;
 
-service Getter {
+service Master {
   // Sends a greeting
-  rpc get_variable (VariableName) returns (VariableValue) {}
-  rpc trace_variable (VariableName) returns (stream VariableValue) {}
+  rpc getVariable (VariableName) returns (VariableValue) {}
+  //rpc traceVariable (VariableName) returns (stream VariableValue) {}
 }
 
 // The request message containing variable's name.
