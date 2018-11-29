@@ -30,9 +30,6 @@ using master::VariableValue;
 
 class ServerNode final : public Master::Service {
 	public:
-		explicit ServerNode() {}
-		explicit ServerNode (std::string name) {
-  		}
 		Status getVariable(ServerContext* context, const VariableName* var,
                   		VariableValue* val) override {
 			val->set_value(42);
@@ -45,7 +42,7 @@ class ServerNode final : public Master::Service {
 int main ()
 {
 	std::string server_address("0.0.0.0:50051");
-  	ServerNode service("unused");
+  	ServerNode service;
   	ServerBuilder builder;
   	builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
   	builder.RegisterService(&service);
