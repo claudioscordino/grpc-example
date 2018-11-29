@@ -29,7 +29,7 @@ using master::VariableValue;
 
 class ClientNode {
 	public:
-		ClientNode(std::shared_ptr<Channel> channel, const std::string& db)
+		ClientNode(std::shared_ptr<Channel> channel)
       			: stub_(Master::NewStub(channel)) {}
  		bool getVariable(const VariableName* name, VariableValue* value) {
     			ClientContext context;
@@ -50,8 +50,7 @@ class ClientNode {
 int main ()
 {
   	ClientNode client(grpc::CreateChannel("localhost:50051",
-                          	grpc::InsecureChannelCredentials()),
-			"unused");
+                          	grpc::InsecureChannelCredentials()));
 
   	std::cout << "-------------- GetFeature --------------" << std::endl;
 	VariableValue ret;
