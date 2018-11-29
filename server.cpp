@@ -1,3 +1,5 @@
+// See tutorial at https://grpc.io/docs/tutorials/basic/c.html
+
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -13,7 +15,6 @@
 #include <grpcpp/security/server_credentials.h>
 #include "master.grpc.pb.h"
 
-// See tutorial at https://grpc.io/docs/tutorials/basic/c.html
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -30,7 +31,6 @@ using master::VariableValue;
 class ImechServer final : public Master::Service {
 	public:
 		explicit ImechServer() {}
-		~ImechServer(){}
 		explicit ImechServer (std::string name) {
   		}
 		Status getVariable(ServerContext* context, const VariableName* var,
