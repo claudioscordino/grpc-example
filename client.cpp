@@ -29,35 +29,36 @@ using master::VariableValue;
 
 class ClientNode {
 	public:
-		ClientNode(std::shared_ptr<Channel> channel)
-      			: stub_(Master::NewStub(channel)) {}
+		ClientNode(std::string server_address) {
+			channel_ = grpc::CreateChannel(server_address, grpc::InsecureChannelCredentials());
+			stub_ = Master::NewStub(channel_);
+		}
  		bool getVariable(const VariableName* name, VariableValue* value) {
     			ClientContext context;
     			Status status = stub_->getVariable(&context, *name, value);
     			if (!status.ok()) {
-      				std::cout << "rpc failed." << std::endl;
+      				std::cout << "Client: rpc failed. Is server running ?" << std::endl;
       				return false;
     			}
     			return true;
   		}
 
-
 	private:
 		std::unique_ptr<Master::Stub> stub_;
+		std::shared_ptr<Channel> channel_;
 };
 
 
 int main ()
 {
-  	ClientNode client(grpc::CreateChannel("localhost:50051",
-                          	grpc::InsecureChannelCredentials()));
+	std::string server_address ("localhost:50051");
+	ClientNode client(server_address);
 
-  	std::cout << "-------------- GetFeature --------------" << std::endl;
 	VariableValue ret;
 	VariableName name;
 	name.set_name("varname");
-  	client.getVariable(&name, &ret);
-	std::cout << "Retrieved = " << ret.value() << std::endl;
+  	if (client.getVariable(&name, &ret))
+		std::cout << "Client retrieved = " << ret.value() << std::endl;
 
 	return 0;
 }
