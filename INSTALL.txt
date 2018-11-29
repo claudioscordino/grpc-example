@@ -1,0 +1,13 @@
+gRPC INSTALLATION INSTRUCTIONS on Linux
+
+ [ See https://github.com/grpc/grpc/blob/master/BUILDING.md ]
+
+$  sudo apt-get install build-essential autoconf libtool pkg-config libgflags-dev libgtest-dev clang libc++-dev
+$  git clone -b v1.16.0 https://github.com/grpc/grpc ## Latest release written at https://grpc.io/release
+$  git submodule update --init
+$  make
+$  sudo make install
+$  cd third_party/protobuf
+$  make && sudo make install
+
+
