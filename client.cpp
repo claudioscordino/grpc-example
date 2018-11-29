@@ -1,13 +1,15 @@
 // See tutorial at https://grpc.io/docs/tutorials/basic/c.html
 
+#define MAX_FILE_SIZE 1024
+
 #include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <iostream>
 #include <memory>
 #include <string>
+#include <fstream>
 #include <thread>
-
 
 #include <grpc/grpc.h>
 #include <grpcpp/channel.h>
@@ -25,6 +27,9 @@ using grpc::Status;
 using master::Master;
 using master::VariableName;
 using master::VariableValue;
+using master::Chunk;
+using master::FileInfo;
+using master::UploadStatus;
 
 
 class ClientNode {
@@ -33,6 +38,7 @@ class ClientNode {
 			channel_ = grpc::CreateChannel(server_address, grpc::InsecureChannelCredentials());
 			stub_ = Master::NewStub(channel_);
 		}
+
  		bool getVariable(const VariableName* name, VariableValue* value) {
     			ClientContext context;
     			Status status = stub_->getVariable(&context, *name, value);
@@ -42,6 +48,10 @@ class ClientNode {
     			}
     			return true;
   		}
+
+		// "server-side streaming"
+		// The client receives a stream of data from the server.
+		// Suitable for monitoring a variable on the server-side.
  		bool traceVariable(const VariableName* name) {
     			ClientContext context;
 			VariableValue val;
@@ -60,6 +70,46 @@ class ClientNode {
     			}
   		}
 
+		// "client-side streaming"
+		// The client sends a stream of data to the server.
+		// Useful for sending big chunks of data (e.g. file upload)
+		bool uploadFile (const std::string filename) {
+			char buffer [MAX_FILE_SIZE];
+			unsigned int read_size = 0, uploaded_size = 0;
+			std::fstream file;
+    			file = std::fstream(filename, std::ios::in | std::ios::binary);
+			for (read_size = 0; read_size < MAX_FILE_SIZE; ++read_size) {
+				file.read((char*) &(buffer[read_size]), sizeof(char));
+				if (file.eof())
+					break;
+			}
+			file.close();
+			std::cout << "Client: read " << read_size << " bytes." << std::endl;
+
+    			ClientContext context;
+			Chunk chunk;
+			UploadStatus reply;
+			std::unique_ptr<ClientWriter<Chunk> > writer(
+        				stub_->uploadFile(&context, &reply));
+			for (uploaded_size = 0; uploaded_size < read_size; ++uploaded_size) {
+				chunk.set_data(&buffer[uploaded_size], 1);
+				if (!writer->Write(chunk)) {
+					// Broken stream
+					break;
+				}
+			}
+			writer->WritesDone();
+    			Status status = writer->Finish();
+			if ((read_size != uploaded_size) || (!status.ok()) || (!reply.result())) {
+      				std::cout << "Client: upload failed. Bytes uploaded = " 
+					<< uploaded_size << std::endl;
+				return false;
+    			} else {
+      				std::cout << "Client: upload succeeded" << std::endl;
+				return true;
+    			}
+		}
+
 	private:
 		std::unique_ptr<Master::Stub> stub_;
 		std::shared_ptr<Channel> channel_;
@@ -70,6 +120,8 @@ int main ()
 {
 	std::string server_address ("localhost:50051");
 	ClientNode client(server_address);
+
+	client.uploadFile("in.pdf");
 
 	VariableValue ret;
 	VariableName name;
