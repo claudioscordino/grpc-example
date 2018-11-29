@@ -2,8 +2,7 @@
 
 CXX = g++
 CPPFLAGS += `pkg-config --cflags protobuf grpc`
-CPPFLAGS += -Wall -Wextra
-CXXFLAGS += -std=c++11
+CXXFLAGS += -std=c++11 -Wall -Wextra
 LDFLAGS += -L/usr/local/lib `pkg-config --libs protobuf grpc++`\
            -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed\
            -ldl
@@ -11,18 +10,19 @@ PROTOC = protoc
 GRPC_CPP_PLUGIN = grpc_cpp_plugin
 GRPC_CPP_PLUGIN_PATH ?= `which $(GRPC_CPP_PLUGIN)`
 
-.PHONY: clean proto system-check all
+.PHONY: clean all
 
-all: proto server
+all: server
 
-proto:
-	$(PROTOC) --grpc_out=. --plugin=protoc-gen-grpc=$(GRPC_CPP_PLUGIN_PATH) master.proto
-	$(PROTOC) --cpp_out=. master.proto
+server: master.pb.o master.grpc.pb.o server.o
+	$(CXX) $^ $(LDFLAGS) -o $@
 
-server:
-	$(CXX) -Wall -Wextra server.cpp $(LDFLAGS) -o server
+%.grpc.pb.cc: %.proto
+	$(PROTOC) --grpc_out=. --plugin=protoc-gen-grpc=$(GRPC_CPP_PLUGIN_PATH) $<
 
+%.pb.cc: %.proto
+	$(PROTOC) --cpp_out=. $<
 
 clean:
-	rm -fr *.pb.* *.grpc.*
+	rm -f *.o *.pb.cc *.pb.h server
 
