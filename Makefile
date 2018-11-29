@@ -12,9 +12,12 @@ GRPC_CPP_PLUGIN_PATH ?= `which $(GRPC_CPP_PLUGIN)`
 
 .PHONY: clean all
 
-all: server
+all: server client
 
 server: master.pb.o master.grpc.pb.o server.o
+	$(CXX) $^ $(LDFLAGS) -o $@
+
+client: master.pb.o master.grpc.pb.o client.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
 %.grpc.pb.cc: %.proto
@@ -24,5 +27,5 @@ server: master.pb.o master.grpc.pb.o server.o
 	$(PROTOC) --cpp_out=. $<
 
 clean:
-	rm -f *.o *.pb.cc *.pb.h server
+	rm -f *.o *.pb.cc *.pb.h server client
 

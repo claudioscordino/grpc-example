@@ -28,10 +28,10 @@ using master::VariableName;
 using master::VariableValue;
 
 
-class ImechServer final : public Master::Service {
+class ServerNode final : public Master::Service {
 	public:
-		explicit ImechServer() {}
-		explicit ImechServer (std::string name) {
+		explicit ServerNode() {}
+		explicit ServerNode (std::string name) {
   		}
 		Status getVariable(ServerContext* context, const VariableName* var,
                   		VariableValue* val) override {
@@ -45,7 +45,7 @@ class ImechServer final : public Master::Service {
 int main ()
 {
 	std::string server_address("0.0.0.0:50051");
-  	ImechServer service("pippo");
+  	ServerNode service("unused");
   	ServerBuilder builder;
   	builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
   	builder.RegisterService(&service);
