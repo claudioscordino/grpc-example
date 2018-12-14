@@ -67,17 +67,12 @@ class ServerNode final : public Master::Service {
 		// "client-side streaming"
                 // The client sends a stream of data to the server.
                 // Useful for sending big chunks of data (e.g. file upload)
-		Status uploadFile(ServerContext* context, ServerReader<Chunk>* reader,
+		Status uploadFile(ServerContext* context, const Chunk* chunk,
                      		Result* result) override {
 			std::fstream file;
                         file = std::fstream(upload_filename, std::ios::out | std::ios::binary | std::ios::trunc);
 			int size = 0;
-			Chunk chunk;
-			for (size = 0; size < MAX_FILE_SIZE; ++size) {
-				if (!reader->Read(&chunk))
-					break;
-				file.write(chunk.data().c_str(), chunk.data().length());
-			}
+			file.write(chunk->data().c_str(), chunk->data().length());
 			std::cout << "Server: received " << size << " bytes." << std::endl;
 
 			return Status::OK;

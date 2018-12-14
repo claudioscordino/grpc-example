@@ -6,7 +6,7 @@ service Master {
   // Sends a greeting
   rpc getVariable (VariableName) returns (VariableValue) {}
   rpc traceVariable (VariableName) returns (stream VariableValue) {}
-  rpc uploadFile (stream Chunk) returns (Result) {}
+  rpc uploadFile (Chunk) returns (Result) {}
   rpc setFileName (FileInfo) returns (Result) {}
 }
 

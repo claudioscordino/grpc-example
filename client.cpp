@@ -1,6 +1,6 @@
 // See tutorial at https://grpc.io/docs/tutorials/basic/c.html
 
-#define MAX_FILE_SIZE 1024
+#define MAX_FILE_SIZE 102400
 
 #include <algorithm>
 #include <chrono>
@@ -77,6 +77,8 @@ class ClientNode {
 			char buffer [MAX_FILE_SIZE];
 			unsigned int read_size = 0, uploaded_size = 0;
 			std::fstream file;
+			std::cout << "Client: file transfer " << local_filename << " => " << 
+				remote_filename << std::endl;
     			file = std::fstream(local_filename, std::ios::in | std::ios::binary);
 			for (read_size = 0; read_size < MAX_FILE_SIZE; ++read_size) {
 				file.read((char*) &(buffer[read_size]), sizeof(char));
@@ -100,25 +102,8 @@ class ClientNode {
 
     			ClientContext context2;
 			Chunk chunk;
-			std::unique_ptr<ClientWriter<Chunk> > writer(
-        				stub_->uploadFile(&context2, &reply));
-			for (uploaded_size = 0; uploaded_size < read_size; ++uploaded_size) {
-				chunk.set_data(&buffer[uploaded_size], 1);
-				if (!writer->Write(chunk)) {
-					// Broken stream
-					break;
-				}
-			}
-			writer->WritesDone();
-    			Status status2 = writer->Finish();
-			if ((read_size != uploaded_size) || (!status2.ok())) {
-      				std::cout << "Client: upload failed. Bytes uploaded = " 
-					<< uploaded_size << std::endl;
-				return false;
-    			} else {
-      				std::cout << "Client: upload succeeded" << std::endl;
-				return true;
-    			}
+			chunk.set_data(&buffer[0], read_size);
+        		stub_->uploadFile(&context2, chunk, &reply);
 		}
 
 	private:
@@ -132,7 +117,7 @@ int main ()
 	std::string server_address ("localhost:50051");
 	ClientNode client(server_address);
 
-	client.uploadFile("in.pdf", "pippo.pdf");
+	client.uploadFile("in.pdf", "out.pdf");
 
 	VariableValue ret;
 	VariableName name;
